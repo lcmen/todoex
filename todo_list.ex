@@ -1,37 +1,3 @@
-defmodule ServerProcess do
-  def start(callback_module) do
-    spawn(fn ->
-      initial_state = callback_module.init()
-      loop(callback_module, initial_state)
-    end)
-  end
-
-  def call(pid, request) do
-    send(pid, {:call, request, self()})
-
-    receive do
-      {:response, response} ->
-        response
-    end
-  end
-
-  def cast(pid, request) do
-    send(pid, {:cast, request})
-  end
-
-  defp loop(callback_module, state) do
-    receive do
-      {:call, request, caller} ->
-        {response, new_state} = callback_module.handle_call(request, state)
-        send(caller, {:response, response})
-        loop(callback_module, new_state)
-      {:cast, request} ->
-        new_state = callback_module.handle_cast(request, state)
-        loop(callback_module, new_state)
-    end
-  end
-end
-
 defmodule TodoList do
   defstruct next_id: 1, entries: %{}
 
@@ -46,7 +12,12 @@ defmodule TodoList do
   end
 
   def update_entry(todo_list, %{} = entry) do
-    update_entry(todo_list, entry.id, fn _ -> entry end)
+    case Map.fetch(todo_list.entries, entry.id) do
+      {:ok, _} ->
+        entries = Map.put(todo_list.entries, entry.id, entry)
+        %TodoList{todo_list | entries: entries}
+      :error -> todo_list
+    end
   end
 
   def delete_entry(todo_list, id) do
@@ -58,57 +29,48 @@ defmodule TodoList do
     |> Stream.filter(fn {_, entry} -> entry.date == date end)
     |> Enum.map(fn {_, entry} -> entry end)
   end
-
-  defp update_entry(todo_list, entry_id, updater) do
-    case Map.fetch(todo_list.entries, entry_id) do
-      {:ok, entry} ->
-        entry = updater.(entry)
-        entries = Map.put(todo_list.entries, entry.id, entry)
-        %TodoList{todo_list | entries: entries}
-      :error -> todo_list
-    end
-  end
 end
 
 defmodule TodoServer do
+  use GenServer
+
   def start do
-    ServerProcess.start(TodoServer)
+    GenServer.start(__MODULE__, nil, [name: __MODULE__])
   end
 
-  def init() do
-    Process.register(self(), :todo_server)
-    TodoList.new()
-  end
-
-  def add_entry(new_entry) do
-    ServerProcess.cast(:todo_server, {:add_entry, new_entry})
+  def add_entry(entry) do
+    GenServer.cast(__MODULE__, {:add_entry, entry})
   end
 
   def delete_entry(entry_id) do
-    ServerProcess.cast(:todo_server, {:delete_entry, entry_id})
+    GenServer.cast(__MODULE__, {:delete_entry, entry_id})
   end
 
   def update_entry(entry) do
-    ServerProcess.cast(:todo_server, {:update_entry, entry})
+    GenServer.cast(__MODULE__, {:update_entry, entry})
   end
 
   def entries(date) do
-    ServerProcess.call(:todo_server, {:entries, date})
+    GenServer.call(__MODULE__, {:entries, date})
+  end
+
+  def init(_) do
+    {:ok, TodoList.new()}
   end
 
   def handle_cast({:add_entry, new_entry}, todo_list) do
-    TodoList.add_entry(todo_list, new_entry)
+    {:noreply, TodoList.add_entry(todo_list, new_entry)}
   end
 
   def handle_cast({:delete_entry, entry_id}, todo_list) do
-    TodoList.delete_entry(todo_list, entry_id)
+    {:noreply, TodoList.delete_entry(todo_list, entry_id)}
   end
 
   def handle_cast({:update_entry, entry}, todo_list) do
-    TodoList.update_entry(todo_list, entry)
+    {:noreply, TodoList.update_entry(todo_list, entry)}
   end
 
-  def handle_call({:entries, date}, todo_list) do
-    {TodoList.entries(todo_list, date), todo_list}
+  def handle_call({:entries, date}, _, todo_list) do
+    {:reply, TodoList.entries(todo_list, date), todo_list}
   end
 end
