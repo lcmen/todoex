@@ -4,23 +4,23 @@ defmodule Todoex.Server do
   use GenServer
 
   def start do
-    GenServer.start(__MODULE__, nil, name: __MODULE__)
+    GenServer.start(__MODULE__, nil)
   end
 
-  def add_entry(entry) do
-    GenServer.cast(__MODULE__, {:add_entry, entry})
+  def add_entry(pid, entry) do
+    GenServer.cast(pid, {:add_entry, entry})
   end
 
-  def delete_entry(entry_id) do
-    GenServer.cast(__MODULE__, {:delete_entry, entry_id})
+  def delete_entry(pid, entry_id) do
+    GenServer.cast(pid, {:delete_entry, entry_id})
   end
 
-  def update_entry(entry) do
-    GenServer.cast(__MODULE__, {:update_entry, entry})
+  def update_entry(pid, entry) do
+    GenServer.cast(pid, {:update_entry, entry})
   end
 
-  def entries(date) do
-    GenServer.call(__MODULE__, {:entries, date})
+  def entries(pid, date) do
+    GenServer.call(pid, {:entries, date})
   end
 
   def init(_) do

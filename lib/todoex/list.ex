@@ -10,11 +10,7 @@ defmodule Todoex.List do
   def add_entry(todo_list, entry) do
     entry = Map.put(entry, :id, todo_list.next_id)
 
-    %List{
-      todo_list
-      | entries: Map.put(todo_list.entries, entry.id, entry),
-        next_id: todo_list.next_id + 1
-    }
+    %List{todo_list | entries: Map.put(todo_list.entries, entry.id, entry), next_id: todo_list.next_id + 1}
   end
 
   def update_entry(todo_list, %{} = entry) do
@@ -36,5 +32,9 @@ defmodule Todoex.List do
     todo_list.entries
     |> Stream.filter(fn {_, entry} -> entry.date == date end)
     |> Enum.map(fn {_, entry} -> entry end)
+  end
+
+  def size(todo_list) do
+    map_size(todo_list.entries)
   end
 end
