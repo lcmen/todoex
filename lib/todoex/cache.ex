@@ -1,5 +1,5 @@
 defmodule Todoex.Cache do
-  alias Todoex.Server
+  alias Todoex.{Database,Server}
 
   use GenServer
 
@@ -12,6 +12,7 @@ defmodule Todoex.Cache do
   end
 
   def init(_) do
+    Database.start()
     {:ok, %{}}
   end
 
@@ -21,7 +22,7 @@ defmodule Todoex.Cache do
         {:reply, server, servers}
 
       :error ->
-        {:ok, server} = Server.start()
+        {:ok, server} = Server.start(name)
         {:reply, server, Map.put(servers, name, server)}
     end
   end
