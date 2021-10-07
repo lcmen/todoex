@@ -1,5 +1,5 @@
 defmodule Todoex.Server do
-  alias Todoex.{Database,List}
+  alias Todoex.{Database, List}
 
   use GenServer
 

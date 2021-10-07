@@ -1,5 +1,5 @@
 defmodule Todoex.Cache do
-  alias Todoex.{Database,Server}
+  alias Todoex.{Database, Server}
 
   use GenServer
 
