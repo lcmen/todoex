@@ -1,29 +1,24 @@
 defmodule Todoex.Cache do
-  alias Todoex.{Database, Server}
+  alias Todoex.Server
 
-  use GenServer
+  def child_spec(_) do
+    %{id: __MODULE__, start: {__MODULE__, :start_link, []}, type: :supervisor}
+  end
 
-  def start do
-    GenServer.start(__MODULE__, nil, name: __MODULE__)
+  def start_link do
+    IO.puts("Starting Todoex.Cache")
+
+    DynamicSupervisor.start_link(name: __MODULE__, strategy: :one_for_one)
   end
 
   def server_process(name) do
-    GenServer.call(__MODULE__, {:server_process, name})
-  end
-
-  def init(_) do
-    Database.start()
-    {:ok, %{}}
-  end
-
-  def handle_call({:server_process, name}, _, servers) do
-    case Map.fetch(servers, name) do
-      {:ok, server} ->
-        {:reply, server, servers}
-
-      :error ->
-        {:ok, server} = Server.start(name)
-        {:reply, server, Map.put(servers, name, server)}
+    case start_child(name) do
+      {:ok, pid} -> pid
+      {:error, {:already_started, pid}} -> pid
     end
+  end
+
+  defp start_child(name) do
+    DynamicSupervisor.start_child(__MODULE__, {Server, name})
   end
 end
