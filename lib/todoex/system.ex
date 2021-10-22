@@ -10,7 +10,8 @@ defmodule Todoex.System do
       [
         Todoex.ProcessRegistry,
         Todoex.Cache,
-        Todoex.Database
+        Todoex.Database,
+        Todoex.Metrics
       ],
       strategy: :one_for_one
     )
