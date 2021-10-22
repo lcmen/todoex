@@ -33,7 +33,7 @@ defmodule Todoex.DatabaseWorker do
     data =
       case File.read(file_name(key, folder)) do
         {:ok, content} -> :erlang.binary_to_term(content)
-        _ -> nil
+        {:error, :enoent} -> nil
       end
 
     {:reply, data, folder}
