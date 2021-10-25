@@ -2,7 +2,6 @@ defmodule Todoex.Metrics.Report do
   use Task
 
   def report do
-    IO.puts("Metrics report: #{inspect(self())}")
     IO.inspect(collect_metrics())
   end
 
