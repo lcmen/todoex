@@ -5,32 +5,20 @@ defmodule Todoex.Database do
   @pool 3
 
   def child_spec(_) do
-    %{id: __MODULE__, start: {__MODULE__, :start_link, []}, type: :supervisor}
-  end
-
-  def start_link do
     File.mkdir_p!(@folder)
 
-    Supervisor.start_link(
-      Enum.map(1..@pool, fn i -> Supervisor.child_spec({DatabaseWorker, {@folder, i}}, id: i) end),
-      name: __MODULE__,
-      strategy: :one_for_one
+    :poolboy.child_spec(
+      __MODULE__,
+      [name: {:local, __MODULE__}, worker_module: DatabaseWorker, size: @pool],
+      [@folder]
     )
   end
 
   def store(key, data) do
-    key
-    |> choose_worker
-    |> DatabaseWorker.store(key, data)
+    :poolboy.transaction(__MODULE__, fn pid -> DatabaseWorker.store(pid, key, data) end)
   end
 
   def get(key) do
-    key
-    |> choose_worker
-    |> DatabaseWorker.get(key)
-  end
-
-  defp choose_worker(key) do
-    :erlang.phash2(key, @pool + 1)
+    :poolboy.transaction(__MODULE__, fn pid -> DatabaseWorker.get(pid, key) end)
   end
 end

@@ -8,10 +8,11 @@ defmodule Todoex.System do
   def init(_) do
     Supervisor.init(
       [
-        Todoex.ProcessRegistry,
         Todoex.Cache,
         Todoex.Database,
-        Todoex.Metrics
+        Todoex.Metrics,
+        Todoex.ProcessRegistry,
+        Todoex.Web
       ],
       strategy: :one_for_one
     )
