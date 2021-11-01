@@ -2,12 +2,12 @@ defmodule Todoex.DatabaseWorker do
   use GenServer
 
   def start_link(folder) do
-    IO.puts("Starting Todoex.DatabaseWorker")
+    IO.puts("Starting Todoex.DatabaseWorker on #{folder}")
     GenServer.start_link(__MODULE__, folder)
   end
 
   def store(pid, key, data) do
-    GenServer.cast(pid, {:store, key, data})
+    GenServer.call(pid, {:store, key, data})
   end
 
   def get(pid, key) do
@@ -19,14 +19,6 @@ defmodule Todoex.DatabaseWorker do
     {:ok, folder}
   end
 
-  def handle_cast({:store, key, data}, folder) do
-    key
-    |> file_name(folder)
-    |> File.write!(:erlang.term_to_binary(data))
-
-    {:noreply, folder}
-  end
-
   def handle_call({:get, key}, _, folder) do
     data =
       case File.read(file_name(key, folder)) do
@@ -35,6 +27,14 @@ defmodule Todoex.DatabaseWorker do
       end
 
     {:reply, data, folder}
+  end
+
+  def handle_call({:store, key, data}, _, folder) do
+    key
+    |> file_name(folder)
+    |> File.write!(:erlang.term_to_binary(data))
+
+    {:reply, :ok, folder}
   end
 
   defp file_name(key, folder) do

@@ -11,7 +11,6 @@ defmodule Todoex.System do
         Todoex.Cache,
         Todoex.Database,
         Todoex.Metrics,
-        Todoex.ProcessRegistry,
         Todoex.Web
       ],
       strategy: :one_for_one

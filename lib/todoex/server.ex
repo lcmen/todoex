@@ -7,7 +7,7 @@ defmodule Todoex.Server do
 
   def start_link(name) do
     IO.puts("Starting Todoex.Server (name: #{name})")
-    GenServer.start_link(__MODULE__, name, name: via_tuple(name))
+    GenServer.start_link(__MODULE__, name, name: global_name(name))
   end
 
   def add_entry(pid, entry) do
@@ -24,6 +24,13 @@ defmodule Todoex.Server do
 
   def entries(pid, date) do
     GenServer.call(pid, {:entries, date})
+  end
+
+  def whereis(name) do
+    case :global.whereis_name({__MODULE__, name}) do
+      :undefined -> nil
+      pid -> pid
+    end
   end
 
   def init(name) do
@@ -64,7 +71,7 @@ defmodule Todoex.Server do
     {:reply, List.entries(todo_list, date), {name, todo_list}, @idle_timout}
   end
 
-  defp via_tuple(name) do
-    ProcessRegistry.via_tuple({__MODULE__, name})
+  defp global_name(name) do
+    {:global, {__MODULE__, name}}
   end
 end

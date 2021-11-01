@@ -12,13 +12,13 @@ defmodule Todoex.Cache do
   end
 
   def server_process(name) do
-    case start_child(name) do
+    Server.whereis(name) || new_process(name)
+  end
+
+  defp new_process(name) do
+    case DynamicSupervisor.start_child(__MODULE__, {Server, name}) do
       {:ok, pid} -> pid
       {:error, {:already_started, pid}} -> pid
     end
-  end
-
-  defp start_child(name) do
-    DynamicSupervisor.start_child(__MODULE__, {Server, name})
   end
 end
