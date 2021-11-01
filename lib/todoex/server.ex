@@ -3,7 +3,7 @@ defmodule Todoex.Server do
 
   use GenServer, restart: :temporary
 
-  @idle_timout :timer.seconds(20)
+  @idle_timout :timer.seconds(120)
 
   def start_link(name) do
     IO.puts("Starting Todoex.Server (name: #{name})")

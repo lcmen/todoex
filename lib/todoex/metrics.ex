@@ -1,5 +1,4 @@
 defmodule Todoex.Metrics do
-  alias Todoex.Metrics.Report
   use Task
 
   def start_link(_) do
@@ -8,7 +7,14 @@ defmodule Todoex.Metrics do
 
   defp loop do
     Process.sleep(:timer.seconds(10))
-    spawn(&Report.report/0)
+    IO.puts(:stderr, inspect(collect_metrics()))
     loop()
+  end
+
+  defp collect_metrics do
+    [
+      memory_usage: :erlang.memory(:total),
+      process_count: :erlang.system_info(:process_count)
+    ]
   end
 end
