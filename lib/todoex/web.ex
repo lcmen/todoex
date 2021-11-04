@@ -13,7 +13,7 @@ defmodule Todoex.Web do
     date = Date.from_iso8601!(Map.fetch!(conn.params, "date"))
 
     list
-    |> Cache.server_process
+    |> Cache.server_process()
     |> Server.add_entry(%{title: title, date: date})
 
     conn
@@ -28,7 +28,7 @@ defmodule Todoex.Web do
 
     entries =
       list
-      |> Cache.server_process
+      |> Cache.server_process()
       |> Server.entries(date)
       |> Enum.map(&"#{&1.date} #{&1.title}")
       |> Enum.join("\n")
@@ -40,6 +40,7 @@ defmodule Todoex.Web do
 
   def child_spec(_) do
     port = Application.fetch_env!(:todoex, :http_port)
+
     Plug.Adapters.Cowboy.child_spec(
       scheme: :http,
       options: [port: port],

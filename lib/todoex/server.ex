@@ -1,5 +1,5 @@
 defmodule Todoex.Server do
-  alias Todoex.{Database, List, ProcessRegistry}
+  alias Todoex.{Database, List}
 
   use GenServer, restart: :temporary
 
